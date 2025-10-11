@@ -43,9 +43,7 @@ router.post("/", async (req, res) => {
       const jsonString = match ? match[0] : text;
       JSON.parse(jsonString); // validate
 
-      return res
-        .status(200)
-        .json({ success: true, result: jsonString});
+      return res.status(200).json({ success: true, result: jsonString });
     } catch (err) {
       lastError = err;
       console.log(`Model ${modelId} failed:`, err?.message || err);
