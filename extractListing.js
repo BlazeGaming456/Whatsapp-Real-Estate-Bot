@@ -21,16 +21,40 @@ router.post("/", async (req, res) => {
 
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    const fullPrompt = `You're an AI Real Estate Listing Parser. I'm giving you the messages from a Real Estate Whatsapp group. I want you to take it, and then categorize it into features such as bhk, location, price and then return a JSON object output.
-            
-            The below is the Whatsapp chat that has been exported -
-            ${prompt}
+    const fullPrompt = `
+You are an AI Real Estate Listing Parser. I will give you a WhatsApp message that contains property listing details. 
+Your job is to extract the structured data and return a clean JSON object.
 
-            The output should be a JSON object with the following keys - 
-            bhk numeric, 
-            location text, 
-            price numeric,
-            contact text. If any of the features are not present in the message, please return null as the value for that key. Only return values with types as mentioned. The output should be only a JSON object and nothing else. No text regarding assumptions, etc., should be included in the response. Only the JSON object.`;
+The input message may include information like BHK, location, price, rent, furnishing status, and contact number.
+
+Follow these rules strictly:
+1. Output ONLY a valid JSON object — no extra text, explanations, or notes.
+2. The JSON must contain these exact keys:
+   - bhk (number)
+   - location (string)
+   - price (number or null)
+   - rentpermonth (number or null)
+   - listing_type (string: either "sale" or "rent")
+   - furnished_status (string or null)
+   - area (string or null)
+   - contact (string or null)
+3. Convert prices like:
+   - "2.5 cr" or "2.5 crore" → 25000000
+   - "75 lakh" or "0.75 cr" → 7500000
+   - "35,000/month" → rentpermonth = 35000
+   - "₹45,000" → 45000
+   - Ignore currency symbols and commas.
+4. If the message is about renting, fill **rentpermonth** and set **price** to null.  
+   If it's about selling, fill **price** and set **rentpermonth** to null.
+5. If any information is missing, return null for that field.
+6. Do not include any fields other than those listed above.
+
+Here is the WhatsApp message:
+
+${prompt}
+
+Return only the JSON object.
+`;
     let lastError = null;
 
     try {

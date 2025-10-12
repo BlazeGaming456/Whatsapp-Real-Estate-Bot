@@ -9,7 +9,7 @@ import { v2 as cloudinary } from "cloudinary";
 const allSessionsObject = {};
 
 cloudinary.config({
-  cloud_name: "Whatsapp Real Estate Bot",
+  cloud_name: "dcylbajel",
   api_key: process.env.CLOUDINARY_KEY,
   api_secret: process.env.CLOUDINARY_SECRET,
 });
@@ -132,10 +132,10 @@ client.on("message", async (msg) => {
         return;
       }
 
-      fs.writeFileSync(
-        `./images/${fileName}`,
-        Buffer.from(base64Data, "base64")
-      );
+      // fs.writeFileSync(
+      //   `./images/${fileName}`,
+      //   Buffer.from(base64Data, "base64")
+      // );
 
       const uploadRes = await cloudinary.uploader.upload(
         `data:${mimeType};base64,${base64Data}`,
