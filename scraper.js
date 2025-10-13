@@ -3,40 +3,44 @@ const { Client, LocalAuth } = pkg;
 import qrcode from "qrcode-terminal";
 import fetch from "node-fetch";
 import { client as db } from "./db.js";
-import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 
-const allSessionsObject = {};
-
+//Setting up Cloudianry to upload images
 cloudinary.config({
   cloud_name: "dcylbajel",
   api_key: process.env.CLOUDINARY_KEY,
   api_secret: process.env.CLOUDINARY_SECRET,
 });
 
+//Whatsapp-Web.js initialization
 const client = new Client({
   puppeteer: {
     headless: false,
   },
 });
 
+//Generates QR Code in the terminal
 client.on("qr", (qr) => {
-  // Generate and scan this code with your phone
   console.log("QR RECEIVED", qr);
+  //Scan this code with you phone to login
   qrcode.generate(qr, { small: true });
 });
 
+//Notifies us when the client is ready
 client.on("ready", () => {
   console.log("Client is ready!");
 });
 
-// Keep track of last inserted listing ID to associate images if needed
+//Keeping track of last inserted listing ID to associate images as needed
 let lastInsertedListingId = null;
 const pendingListings = new Map();
 
+//Whatsapp message handler
 client.on("message", async (msg) => {
   const chatId = msg.from;
   const chat = await msg.getChat();
+
+  //Chat groups to extract the listings from
   const TARGET_GROUPS = ["Real Estate Listings"];
 
   if (!chat.isGroup || !TARGET_GROUPS.includes(chat.name)) {
@@ -44,13 +48,18 @@ client.on("message", async (msg) => {
   }
 
   console.log(msg.body);
+
+  //Test message
   if (msg.body === "ping") {
     msg.reply("pong");
   }
+
+  //Identifies the listings
   if (
     (msg.body && msg.body.toLowerCase().includes("bhk")) ||
     msg.body.toLowerCase().includes("rent")
   ) {
+    //Include within a promise, so that the images are processed only after the listing has been added to the database
     const listingPromise = (async () => {
       try {
         const res = await fetch("http://localhost:3001/extract", {
@@ -81,7 +90,7 @@ client.on("message", async (msg) => {
         const result = JSON.parse(data.result);
         console.log(data);
 
-        //Save to the database
+        //Saving to the database
         const insertQuery = `
   INSERT INTO listings (
     bhk,
@@ -114,10 +123,6 @@ client.on("message", async (msg) => {
           JSON.stringify(result.links || []),
         ]);
 
-        console.log("dbRes:", dbRes);
-        console.log("rows:", dbRes.rows[0]);
-        console.log("id:", dbRes.rows[0].id);
-
         lastInsertedListingId = dbRes.rows[0].id;
         console.log("Saved listing to the database:", result);
         return lastInsertedListingId;
@@ -127,9 +132,11 @@ client.on("message", async (msg) => {
       }
     })();
 
+    //Save the id to the map, so that we can associate the images easily
     pendingListings.set(chatId, listingPromise);
   }
 
+  //Identifies if any images have been sent in the chat
   if (msg.hasMedia) {
     try {
       const media = await msg.downloadMedia();
@@ -151,11 +158,7 @@ client.on("message", async (msg) => {
         return;
       }
 
-      // fs.writeFileSync(
-      //   `./images/${fileName}`,
-      //   Buffer.from(base64Data, "base64")
-      // );
-
+      //Upload the image into Cloudinary and get the URL
       const uploadRes = await cloudinary.uploader.upload(
         `data:${mimeType};base64,${base64Data}`,
         {
@@ -165,6 +168,7 @@ client.on("message", async (msg) => {
 
       const imageUrl = uploadRes.secure_url;
 
+      //If we can get a listing id, then we associate the image with it. Otherwise, we inform the user
       if (lastInsertedListingId) {
         const insertImageQuery = `
         INSERT INTO IMAGES (listing_id, image_url)
@@ -181,10 +185,12 @@ client.on("message", async (msg) => {
   }
 });
 
+//Notifies us about the status of the client initialization
 client.on("loading_screen", (percent, message) => {
   console.log("Loading", percent, message);
 });
 
+//Notifies the reason why the client was disconnected
 client.on("disconnected", (reason) => {
   console.log("Disconnected:", reason);
 });
