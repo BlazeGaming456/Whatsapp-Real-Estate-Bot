@@ -59,6 +59,9 @@ async function setup() {
         price TEXT,
         rentpermonth TEXT,
         number TEXT,
+        broker_anme TEXT,
+        chat_group TEXT,
+        links JSONB,
         created_at TIMESTAMP DEFAULT NOW()
         )
         `;

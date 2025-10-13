@@ -37,9 +37,9 @@ const pendingListings = new Map();
 client.on("message", async (msg) => {
   const chatId = msg.from;
   const chat = await msg.getChat();
-  const TARGET_GROUP = "Real Estate Listings";
+  const TARGET_GROUPS = ["Real Estate Listings"];
 
-  if (!chat.isGroup || chat.name != TARGET_GROUP) {
+  if (!chat.isGroup || !TARGET_GROUPS.includes(chat.name)) {
     return;
   }
 
@@ -56,7 +56,7 @@ client.on("message", async (msg) => {
         const res = await fetch("http://localhost:3001/extract", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: msg.body }),
+          body: JSON.stringify({ prompt: msg.body, chatName: chat.name }),
         });
         const contentType = res.headers.get("content-type") || "";
         if (!res.ok) {
@@ -83,16 +83,35 @@ client.on("message", async (msg) => {
 
         //Save to the database
         const insertQuery = `
-        INSERT into listings (bhk, location, price, number)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id;
-      `;
+  INSERT INTO listings (
+    bhk,
+    location,
+    price,
+    rentpermonth,
+    listing_type,
+    furnished_status,
+    area,
+    contact,
+    broker_name,
+    chat_group,
+    links
+  )
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+  RETURNING id;
+`;
 
         const dbRes = await db.query(insertQuery, [
           result.bhk,
           result.location,
           result.price,
+          result.rentpermonth,
+          result.listing_type,
+          result.furnished_status,
+          result.area,
           result.contact,
+          result.broker_name,
+          result.chat_group,
+          JSON.stringify(result.links || []),
         ]);
 
         console.log("dbRes:", dbRes);

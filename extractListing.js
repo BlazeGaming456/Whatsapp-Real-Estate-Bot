@@ -6,7 +6,7 @@ const router = express.Router();
 // This router is mounted at '/extract' in server.js, so the path here should be '/'
 router.post("/", async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { prompt, chatName } = req.body;
 
     const apiKey =
       process.env.GOOGLE_API_KEY ||
@@ -25,7 +25,7 @@ router.post("/", async (req, res) => {
 You are an AI Real Estate Listing Parser. I will give you a WhatsApp message that contains property listing details. 
 Your job is to extract the structured data and return a clean JSON object.
 
-The input message may include information like BHK, location, price, rent, furnishing status, and contact number.
+The input message may include information like BHK, location, price, rent, furnishing status, contact number, broker name, group name, or external links.
 
 Follow these rules strictly:
 1. Output ONLY a valid JSON object — no extra text, explanations, or notes.
@@ -38,6 +38,9 @@ Follow these rules strictly:
    - furnished_status (string or null)
    - area (string or null)
    - contact (string or null)
+   - chat_group (string or null)
+   - broker_name (string or null)
+   - links (array of strings, empty if none)
 3. Convert prices like:
    - "2.5 cr" or "2.5 crore" → 25000000
    - "75 lakh" or "0.75 cr" → 7500000
@@ -46,15 +49,20 @@ Follow these rules strictly:
    - Ignore currency symbols and commas.
 4. If the message is about renting, fill **rentpermonth** and set **price** to null.  
    If it's about selling, fill **price** and set **rentpermonth** to null.
-5. If any information is missing, return null for that field.
-6. Do not include any fields other than those listed above.
+5. Extract **broker_name** if any name or firm is mentioned (e.g., “Contact Ramesh Realty” → "Ramesh Realty").
+6. Extract **links** from the message (URLs starting with http, https, or www).
+7. The **chat_group** field should contain the name of the WhatsApp group (provided separately below).
+8. If any information is missing, return null or empty array for that field.
+9. Do not include any fields other than those listed above.
 
 Here is the WhatsApp message:
-
 ${prompt}
+
+The message was sent in the Whatsapp group: "${chatName}"
 
 Return only the JSON object.
 `;
+
     let lastError = null;
 
     try {
