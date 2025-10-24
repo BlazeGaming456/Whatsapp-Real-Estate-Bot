@@ -59,13 +59,13 @@ async function setup() {
         price TEXT,
         rentpermonth TEXT,
         number TEXT,
-        broker_anme TEXT,
+        broker_name TEXT,
         chat_group TEXT,
         links JSONB,
         created_at TIMESTAMP DEFAULT NOW()
         )
         `;
-    
+
     const createImageTableQuery = `
     CREATE TABLE IF NOT EXISTS images (
       id SERIAL PRIMARY KEY,
@@ -73,10 +73,24 @@ async function setup() {
       image_url TEXT,
       created_at TIMESTAMP DEFAULT NOW()
     )
-    `
+    `;
 
     await client.query(createTableQuery);
     await client.query(createImageTableQuery);
+
+    // Add missing broker_name column if it doesn't exist
+    try {
+      await client.query(`
+        ALTER TABLE listings 
+        ADD COLUMN IF NOT EXISTS broker_name TEXT;
+      `);
+    } catch (error) {
+      console.log(
+        "broker_name column already exists or error adding it:",
+        error.message
+      );
+    }
+
     console.log("Table created or already existed!");
   } catch (error) {
     console.error("Error setting up the database:", error);
