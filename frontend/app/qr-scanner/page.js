@@ -20,10 +20,10 @@ export default function QRScannerPage() {
           className="text-center mb-12"
         >
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            Connect WhatsApp
+            Connect to WhatsApp!
           </h1>
           <p className="text-gray-600 text-lg">
-            Scan the QR code to start receiving property listings
+            Scan the QR code and start recording property listings
           </p>
         </motion.div>
 
@@ -34,26 +34,6 @@ export default function QRScannerPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 max-w-lg w-full"
           >
-            {/* Status Indicator */}
-            <div className="mb-6">
-              {whatsappConnected ? (
-                <div className="flex items-center justify-center space-x-2 text-green-600 bg-green-50 py-3 px-4 rounded-lg">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-medium">Successfully Connected!</span>
-                </div>
-              ) : connectionError ? (
-                <div className="flex items-center justify-center space-x-2 text-red-600 bg-red-50 py-3 px-4 rounded-lg">
-                  <AlertCircle className="w-5 h-5" />
-                  <span className="font-medium">Connection Failed</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center space-x-2 text-blue-600 bg-blue-50 py-3 px-4 rounded-lg">
-                  <Smartphone className="w-5 h-5" />
-                  <span className="font-medium">Waiting for Connection</span>
-                </div>
-              )}
-            </div>
-
             {/* QR Code Display */}
             <div className="flex justify-center mb-6">
               {isLoading ? (

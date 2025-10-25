@@ -1,30 +1,39 @@
+'use client'
+
 import React from 'react'
-import Image from 'next/image'
+import { useWhatsApp } from '../contexts/WhatsAppContext'
 
 const Navbar = () => {
+  const { isConnected: whatsappConnected } = useWhatsApp()
+
   return (
     <nav className='bg-white shadow-lg border-b border-gray-200'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+      <div className='max-w-7xl mx-auto px-6 sm:px-8 w-full'>
         <div className='flex justify-between items-center h-16'>
           {/* Logo */}
           <div className='flex items-center'>
-            <div className='flex-shrink-0'>
-              <h1 className='text-xl font-bold text-gray-800'>
-                📄 Smart PDF Filler
-              </h1>
-            </div>
+            <h1 className='text-2xl font-bold font-mono text-gray-800 hover:text-green-700 cursor-pointer transition-colors'>
+              EstateEdge
+            </h1>
           </div>
 
-          {/* User Account */}
-          <div className="p-[2px] rounded-full hover:bg-gray-300 hover:cursor-pointer transition-all duration-200">
-      <Image
-        src="/account.png"
-        width={35}
-        height={35}
-        alt="Account icon"
-        className="rounded-full"
-      />
-    </div>
+          {/* WhatsApp Connection Indicator */}
+          <div
+            className={`flex items-center space-x-2 py-1.5 px-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer ${
+              whatsappConnected
+                ? 'hover:border-green-400'
+                : 'hover:border-red-400'
+            } transition-all duration-150`}
+          >
+            <div
+              className={`w-2.5 h-2.5 rounded-full ${
+                whatsappConnected ? 'bg-green-500' : 'bg-red-500'
+              }`}
+            />
+            <span className='text-sm font-medium text-gray-700 hidden sm:inline'>
+              {whatsappConnected ? 'Connected' : 'Disconnected'}
+            </span>
+          </div>
         </div>
       </div>
     </nav>

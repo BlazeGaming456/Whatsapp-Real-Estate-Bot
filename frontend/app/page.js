@@ -50,7 +50,7 @@ export default function DashboardPage() {
             Property Listings
           </h1>
           <p className="text-gray-600 text-lg">
-            Real-time updates from your WhatsApp groups
+            Real-time updates collected from your WhatsApp groups!
           </p>
         </motion.div>
 
@@ -61,7 +61,7 @@ export default function DashboardPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8"
           >
-            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-gray-300 transition-colors">
+            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-gray-400 cursor-pointer transition-colors">
               <div className="flex items-center">
                 <div className="p-2.5 bg-blue-50 rounded-lg">
                   <svg
@@ -89,7 +89,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-gray-300 transition-colors">
+            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-gray-400 cursor-pointer transition-colors">
               <div className="flex items-center">
                 <div className="p-2.5 bg-green-50 rounded-lg">
                   <svg
@@ -117,7 +117,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-gray-300 transition-colors">
+            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-gray-400 cursor-pointer transition-colors">
               <div className="flex items-center">
                 <div className="p-2.5 bg-yellow-50 rounded-lg">
                   <svg
@@ -145,7 +145,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-gray-300 transition-colors">
+            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-gray-400 cursor-pointer transition-colors">
               <div className="flex items-center">
                 <div className="p-2.5 bg-purple-50 rounded-lg">
                   <svg
