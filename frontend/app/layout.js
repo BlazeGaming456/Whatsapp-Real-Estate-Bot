@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Real Estate Listings Dashboard",
+  title: "Real Estate Listings Extractor and Dashboard",
   description:
-    "Real-time WhatsApp real estate listings with AI-powered extraction",
+    "Real-time estate listings extracted from Whatsapp chats using AI and displayed on a dashboard",
 };
 
 export default function RootLayout({ children }) {

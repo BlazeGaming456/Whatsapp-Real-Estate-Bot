@@ -5,28 +5,25 @@ import fetch from "node-fetch";
 import { client as db } from "./db.js";
 import { v2 as cloudinary } from "cloudinary";
 
-//Setting up Cloudianry to upload images
+// Setting up Cloudianry to upload images
 cloudinary.config({
   cloud_name: "dcylbajel",
   api_key: process.env.CLOUDINARY_KEY,
   api_secret: process.env.CLOUDINARY_SECRET,
 });
 
-//Whatsapp-Web.js initialization
+// Whatsapp-Web.js initialization
 const client = new Client({
   puppeteer: {
-    headless: false,
+    headless: true,
   },
 });
 
 //Generates QR Code in the terminal
 client.on("qr", (qr) => {
   console.log("QR RECEIVED", qr);
-  //Scan this code with you phone to login
   qrcode.generate(qr, { small: true });
 
-  // EMIT QR CODE TO FRONTEND
-  // This sends the QR code data to frontend clients for display
   if (global.io) {
     global.io.emit("qr_code", {
       qr: qr,
@@ -40,7 +37,6 @@ client.on("qr", (qr) => {
 client.on("ready", () => {
   console.log("✅ WhatsApp client is ready!");
 
-  // Emit WhatsApp ready status to frontend
   if (global.io) {
     global.io.emit("whatsapp_ready", {
       status: "connected",
@@ -50,27 +46,27 @@ client.on("ready", () => {
   }
 });
 
-//Keeping track of last inserted listing ID to associate images as needed
+// Keeping track of last inserted listing ID to associate images as needed
 let lastInsertedListingId = null;
 const pendingListings = new Map();
 
-//Whatsapp message handler
+// Whatsapp message handler
 client.on("message", async (msg) => {
   const chatId = msg.from;
   const chat = await msg.getChat();
 
-  // Log all messages for debugging
-  console.log(
-    `📱 Message received from: ${chat.name || "Unknown"} (${
-      chat.isGroup ? "Group" : "Individual"
-    })`
-  );
-  console.log(`📝 Message body: ${msg.body}`);
+  // // Log all messages for debugging
+  // console.log(
+  //   `📱 Message received from: ${chat.name || "Unknown"} (${
+  //     chat.isGroup ? "Group" : "Individual"
+  //   })`
+  // );
+  // console.log(`📝 Message body: ${msg.body}`);
 
-  //Chat groups to extract the listings from
+  // Chat groups to extract the listings from
   const TARGET_GROUPS = ["Real Estate Listings"];
 
-  // Also allow any group with "real estate" or "property" in the name
+  // Function to check if a group name satisfies the condition
   const isRealEstateGroup = (groupName) => {
     const lowerName = groupName.toLowerCase();
     return (
@@ -83,63 +79,30 @@ client.on("message", async (msg) => {
 
   // Skip if not a group
   if (!chat.isGroup) {
-    console.log("⏭️ Skipping: Not a group message");
     return;
   }
 
   // Check if it's a real estate related group
   if (!isRealEstateGroup(chat.name)) {
-    console.log(`⏭️ Skipping: Group "${chat.name}" is not a real estate group`);
     return;
   }
 
-  console.log(`✅ Processing message from target group: ${chat.name}`);
+  console.log(`Processing message from target group: ${chat.name}`);
 
-  //Test message
-  if (msg.body === "ping") {
-    msg.reply("pong");
-    return;
-  }
+  // //Test message
+  // if (msg.body === "ping") {
+  //   msg.reply("pong");
+  //   return;
+  // }
 
-  // Test listing message
-  if (msg.body === "test listing") {
-    console.log("🧪 Test listing message received - simulating processing...");
-    // Simulate a test listing
-    const testListing = {
-      bhk: 2,
-      location: "Test Location",
-      price: "5000000",
-      rentpermonth: "25000",
-      listing_type: "sale",
-      furnished_status: "semi-furnished",
-      area: "1000 sq ft",
-      contact: "1234567890",
-      broker_name: "Test Broker",
-      chat_group: chat.name,
-      links: [],
-    };
-
-    // Emit test listing to frontend
-    if (global.io) {
-      global.io.emit("new_listing", {
-        id: 999,
-        ...testListing,
-        timestamp: new Date().toISOString(),
-      });
-      console.log("📡 Emitted test listing to frontend");
-    }
-
-    msg.reply("Test listing processed! Check your dashboard.");
-    return;
-  }
-
-  //Identifies the listings - Fixed the condition
+  // Identifies the listings
   if (
     msg.body &&
     (msg.body.toLowerCase().includes("bhk") ||
       msg.body.toLowerCase().includes("rent"))
   ) {
     console.log("🏠 Real estate listing detected! Processing...");
+
     //Include within a promise, so that the images are processed only after the listing has been added to the database
     const listingPromise = (async () => {
       try {
@@ -150,29 +113,10 @@ client.on("message", async (msg) => {
           body: JSON.stringify({ prompt: msg.body, chatName: chat.name }),
         });
 
-        const contentType = res.headers.get("content-type") || "";
-        console.log(
-          `📡 Extraction response status: ${res.status}, content-type: ${contentType}`
-        );
-
         if (!res.ok) {
           const raw = await res.text();
-          console.error(
-            "❌ /extract non-200 response:",
-            res.status,
-            contentType,
-            raw.slice(0, 500)
-          );
+          console.error("Error:", res.status, contentType, raw.slice(0, 500));
           throw new Error(`extract failed with ${res.status}`);
-        }
-
-        if (!contentType.includes("application/json")) {
-          const raw = await res.text();
-          console.error(
-            "❌ /extract returned non-JSON. Body snippet:",
-            raw.slice(0, 500)
-          );
-          throw new Error("extract returned non-JSON response");
         }
 
         const data = await res.json();
@@ -181,7 +125,6 @@ client.on("message", async (msg) => {
         const result = JSON.parse(data.result);
         console.log("📊 Parsed result:", result);
 
-        //Saving to the database
         const insertQuery = `
   INSERT INTO listings (
     bhk,
@@ -222,7 +165,6 @@ client.on("message", async (msg) => {
         );
         console.log("📋 Listing data:", result);
 
-        // EMIT REAL-TIME EVENT TO FRONTEND
         // This sends the new listing data to all connected frontend clients
         if (global.io) {
           global.io.emit("new_listing", {
@@ -236,8 +178,7 @@ client.on("message", async (msg) => {
 
         return lastInsertedListingId;
       } catch (err) {
-        console.error("❌ Error processing listing:", err);
-        console.error("❌ Error details:", err.message);
+        console.error("Error details:", err.message);
         return null;
       }
     })();
@@ -258,7 +199,6 @@ client.on("message", async (msg) => {
       const mimeType = media.mimetype;
       const base64Data = media.data;
       const fileExtension = mimeType.split("/")[1];
-      const fileName = `image_${Date.now()}.${fileExtension}`;
 
       const listingPromise = pendingListings.get(chatId);
       if (!listingPromise) {
@@ -291,8 +231,7 @@ client.on("message", async (msg) => {
         await db.query(insertImageQuery, [listingId, imageUrl]);
         console.log("Saved image to the database:", imageUrl);
 
-        // EMIT REAL-TIME EVENT FOR NEW IMAGE
-        // This notifies frontend clients that a new image was added to a listing
+        // Emit rea-time event for new image
         if (global.io) {
           global.io.emit("new_image", {
             listingId: listingId,
@@ -313,19 +252,25 @@ client.on("message", async (msg) => {
 //Notifies us about the status of the client initialization
 client.on("loading_screen", (percent, message) => {
   console.log("Loading", percent, message);
+
+  if (global.io) {
+    global.io.emit("whatsapp_loading", {
+      percent: percent,
+      message: message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 //Notifies the reason why the client was disconnected
 client.on("disconnected", (reason) => {
-  console.log("❌ WhatsApp disconnected:", reason);
+  console.log("WhatsApp disconnected:", reason);
 
-  // Emit WhatsApp disconnected status to frontend
   if (global.io) {
     global.io.emit("whatsapp_disconnected", {
       reason: reason,
       timestamp: new Date().toISOString(),
     });
-    console.log("📡 Emitted WhatsApp disconnected status to frontend");
   }
 });
 

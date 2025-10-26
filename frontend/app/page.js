@@ -5,9 +5,21 @@ import { motion } from "framer-motion";
 import { useListings } from "../hooks/useListings";
 import { fetchStats } from "../lib/api";
 import ListingsGrid from "../components/ListingsGrid";
+import FilterPanel from "../components/FilterPanel";
+import { useWhatsApp } from "../contexts/WhatsAppContext";
+import { RefreshCw } from "lucide-react";
 
 export default function DashboardPage() {
+  const { isWhatsAppLoading, loadingProgress } = useWhatsApp();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    type: "",
+    location: "",
+    furnished: "",
+    bhk: "",
+    min_price: "",
+    max_price: "",
+  });
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -31,7 +43,23 @@ export default function DashboardPage() {
   const { listings, newListings, isLoading, error, refetch, clearNewListings } =
     useListings({
       search: searchTerm,
+      ...filters,
     });
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      type: "",
+      location: "",
+      furnished: "",
+      bhk: "",
+      min_price: "",
+      max_price: "",
+    });
+  };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -39,6 +67,43 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* WhatsApp Loading Overlay */}
+      {isWhatsAppLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="bg-gray-500 rounded-2xl shadow-2xl p-8 max-w-md mx-4 w-full"
+          >
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <RefreshCw className="w-12 h-12 text-blue-600 animate-spin" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Connecting to WhatsApp...
+              </h2>
+              <p className="text-gray-600 mb-4">
+                {loadingProgress?.message || "Loading your chats and contacts"}
+              </p>
+              {loadingProgress && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${loadingProgress.percent}%` }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-blue-600 h-2 rounded-full"
+                  />
+                </div>
+              )}
+              <p className="text-sm text-gray-500">
+                Please wait while we sync your data...
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -175,32 +240,12 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-8"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Search by location, price, BHK..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
-            </div>
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="px-4 py-2.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </motion.div>
+        {/* Filter Panel */}
+        <FilterPanel
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onReset={handleResetFilters}
+        />
 
         <ListingsGrid
           listings={listings}

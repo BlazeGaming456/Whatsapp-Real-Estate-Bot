@@ -1,5 +1,8 @@
 "use client";
 
+// This file automnatically redirects the user after connection or being disconnected from the whatsapp-web.js api.
+// It also provides the loading screen in-between routing.
+
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useWhatsApp } from "../contexts/WhatsAppContext";

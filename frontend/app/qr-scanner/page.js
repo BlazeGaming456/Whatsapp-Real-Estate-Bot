@@ -7,11 +7,53 @@ import QRCodeDisplay from "../../components/QRCodeDisplay";
 import { useWhatsApp } from "../../contexts/WhatsAppContext";
 
 export default function QRScannerPage() {
-  const { isConnected: whatsappConnected, connectionError } = useWhatsApp();
+  const {
+    isConnected: whatsappConnected,
+    connectionError,
+    isWhatsAppLoading,
+    loadingProgress,
+  } = useWhatsApp();
   const { qrCode, isLoading, requestQRCode } = useQRCode();
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* WhatsApp Loading Overlay */}
+      {isWhatsAppLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 w-full"
+          >
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <RefreshCw className="w-12 h-12 text-blue-600 animate-spin" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Setting up WhatsApp...
+              </h2>
+              <p className="text-gray-600 mb-4">
+                {loadingProgress?.message || "Initializing your connection"}
+              </p>
+              {loadingProgress && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${loadingProgress.percent}%` }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-blue-600 h-2 rounded-full"
+                  />
+                </div>
+              )}
+              <p className="text-sm text-gray-500">
+                Please wait while we connect...
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

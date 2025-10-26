@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
  * QR Code Display Component
  * Renders an actual QR code using the qrcode library
  */
+
 export default function QRCodeDisplay({ qrCode, size = 256 }) {
   const canvasRef = useRef(null);
 

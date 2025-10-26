@@ -1,16 +1,13 @@
 import axios from "axios";
 
 // Create an axios instance with base configuration
-// This makes it easier to make API calls to our backend
 const api = axios.create({
-  baseURL: "http://localhost:3001", // Backend server URL
-  timeout: 10000, // Request timeout after 10 seconds
+  baseURL: "http://localhost:3001",
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
 });
-
-// API functions for different endpoints
 
 // Fetch listings with search, filter, and pagination
 export const fetchListings = async (params = {}) => {
@@ -34,7 +31,7 @@ export const fetchStats = async () => {
   }
 };
 
-// Extract listing data using AI (if needed for testing)
+// Extract listing data using AI
 export const extractListing = async (prompt, chatName) => {
   try {
     const response = await api.post("/extract", { prompt, chatName });

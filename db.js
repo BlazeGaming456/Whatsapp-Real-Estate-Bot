@@ -78,7 +78,6 @@ async function setup() {
     await client.query(createTableQuery);
     await client.query(createImageTableQuery);
 
-    // Add missing broker_name column if it doesn't exist
     try {
       await client.query(`
         ALTER TABLE listings 

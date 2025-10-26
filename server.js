@@ -1,9 +1,9 @@
 import express from "express";
+import { client as db } from "./db.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import extractRouter from "./extractListing.js";
-import { client as db } from "./db.js";
 
 //The scraper and the database setup are run throughout
 import "./scraper.js";
@@ -20,28 +20,10 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
-
-// Create Socket.IO server for real-time communication
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-});
-
-// Make io available globally for use in other files
-global.io = io;
-
-//Assign extractRouter to the /extract URL
+//Assigns the extractRouter to the /extract URL
 app.use("/extract", extractRouter);
 
-// NEW API ROUTES FOR FRONTEND
-// Get paginated listings for the frontend
+// New API routes for the frontend
 app.get("/api/listings", async (req, res) => {
   try {
     const {
@@ -144,6 +126,25 @@ app.get("/api/stats", async (req, res) => {
   }
 });
 
+app.use(express.json());
+
+// Logs each request
+app.use((req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+// Create Socket.IO server for real-time communication
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
+
+// Make io available globally for use in other files
+global.io = io;
+
 // Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log("Frontend client connected:", socket.id);
@@ -157,8 +158,6 @@ io.on("connection", (socket) => {
   // Handle QR code requests
   socket.on("request_qr", () => {
     console.log("QR code requested by client:", socket.id);
-    // The QR code will be emitted automatically when WhatsApp generates it
-    // This is handled in scraper.js when the 'qr' event is triggered
   });
 
   socket.on("disconnect", () => {
