@@ -12,7 +12,6 @@ import "./db.js";
 const app = express();
 const server = createServer(app);
 
-// Configure CORS for frontend communication
 app.use(
   cors({
     origin: "http://localhost:3000", // Next.js frontend URL
@@ -20,7 +19,6 @@ app.use(
   })
 );
 
-//Assigns the extractRouter to the /extract URL
 app.use("/extract", extractRouter);
 
 // New API routes for the frontend
@@ -142,7 +140,7 @@ const io = new Server(server, {
   },
 });
 
-// Make io available globally for use in other files
+// Makes io available globally for use in other files
 global.io = io;
 
 // Socket.IO connection handling
